@@ -40,7 +40,7 @@ package:
 
 functions:
   mainRoutes:
-    handler: src/app.handler
+    handler: server.handler
     timeout: 28
     events:
       - httpApi:

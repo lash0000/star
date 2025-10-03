@@ -27,8 +27,8 @@ const sendEmail = async (options) => {
   try {
     const result = transporter.sendMail({
       from: {
-        name: "Philproperties Services",
-        address: process.env.SMTP_SERVICE,
+        name: "Philproperties",
+        address: process.env.MAIL_USERNAME,
       },
       to,
       subject,

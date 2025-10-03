@@ -1,4 +1,4 @@
-org: hobbyist
+org: philproperties 
 app: star-philpro
 service: star
 
@@ -12,8 +12,14 @@ provider:
   runtime: nodejs20.x
   region: ap-southeast-2
   environment:
-    ENV: ${env:POSTGRE_HOST}
-
+    POSTGRE_HOST: ${env:POSTGRE_HOST}
+    POSTGRE_PORT: ${env:POSTGRE_PORT}
+    POSTGRE_DB_NAME: ${env:POSTGRE_DB_NAME}
+    POSTGRE_DB_USER: ${env:POSTGRE_DB_USER}
+    POSTGRE_DB_PWD: ${env:POSTGRE_DB_PWD}
+    SMTP_SERVICE: ${env:SMTP_SERVICE}
+    SMTP_APP: ${env:SMTP_APP}
+    JWT_SECRET: ${env:JWT_SECRET}
   httpApi:
     cors:
       allowedOrigins:
@@ -45,13 +51,4 @@ functions:
     events:
       - httpApi:
           path: /{proxy+}
-          method: get
-      - httpApi:
-          path: /{proxy+}
-          method: post
-      - httpApi:
-          path: /{proxy+}
-          method: put
-      - httpApi:
-          path: /{proxy+}
-          method: delete
+          method: any

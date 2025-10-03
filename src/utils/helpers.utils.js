@@ -1,17 +1,15 @@
 // This locates our root handler for routes.
+const express = require('express');
+const userCredsRoutes = require('../modules/user_creds/user_creds.rt');
 
-const { Router } = require('express');
-const jwt = require('jsonwebtoken');
-
-class Routes {
+class mainRoutes {
   constructor() {
-    this.router = Router();
-    this.initRoutes();
+    this.router = express.Router();
+    this.registerRoutes(this.router);
   }
 
-  initRoutes() {
-    this.router.post('/generate-otp', userAuthController.generateOTP);
-
+  registerRoutes(router) {
+    router.use('/user-creds', userCredsRoutes);
   }
 
   getRouter() {
@@ -19,4 +17,4 @@ class Routes {
   }
 }
 
-module.exports = new Routes().getRouter();
+module.exports = new mainRoutes().getRouter();

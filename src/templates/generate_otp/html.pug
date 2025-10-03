@@ -1,0 +1,11 @@
+html
+  head
+    title Email Verification
+    style
+      include style.css
+  body
+    h1 Verify Your Email
+    p Hi #{user.email},
+    p Your One-Time Password (OTP) for email verification is:
+    p.code #{otp}
+    p This OTP expires in 5 minutes. Please do not share it with anyone.

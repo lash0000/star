@@ -2,17 +2,22 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const serverless = require('serverless-http');
+const mainRoutes = require('./src/utils/helpers.utils');
+const sequelize = require('./config/db.config');
 
 dotenv.config();
-const app = express();
+const o_app = express();
 
 // JSON Payload
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cors());
+o_app.use(express.json({ limit: '10mb' }));
+o_app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+o_app.use(cors());
+
+// Load all
+o_app.use('/api/v1/data', mainRoutes);
 
 // Main route
-app.get('/', (req, res) => {
+o_app.get('/', (req, res) => {
   res.json({
     project_name: "Sales Training and Recruitment System by Philproperties",
     project_overview: "Serverless architecture via REST with Sequelize, Nodemailer, ElastiCache, EC2 and S3",
@@ -26,17 +31,23 @@ app.get('/', (req, res) => {
   });
 });
 
+const db_postgres_connection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('PostgreSQL database is connected YAAY');
+  } catch (error) {
+    console.error('Database connection error:', err);
+    setTimeout(C_Postgres, 5000);
+  }
+}
+db_postgres_connection();
+
 // Export handler for Serverless
-module.exports.handler = serverless(app);
+module.exports.handler = serverless(o_app);
 
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-
-  process.on('SIGINT', async () => {
-    await redisClient.quit();
-    process.exit(0);
+  const CFG_PORT = process.env.PORT || 3000;
+  o_app.listen(CFG_PORT, () => {
+    console.log(`Server running on port ${CFG_PORT}`);
   });
 }

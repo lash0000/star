@@ -7,6 +7,7 @@ class UserCredsController {
     this.as_register = this.as_register.bind(this);
     this.as_generateOtp = this.as_generateOtp.bind(this);
     this.as_verifyOtp = this.as_verifyOtp.bind(this);
+    this.as_deleteUser = this.as_deleteUser.bind(this);
   }
 
   async as_register(req, res) {
@@ -27,6 +28,13 @@ class UserCredsController {
     const { email, token } = req.body;
     if (!email || !token) return res.status(400).json({ error: 'Email and token are required' });
     const result = await this.service.verifyOtp(email, token);
+    res.status(200).json(result);
+  }
+
+  async as_deleteUser(req, res) {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    const result = await this.service.deleteUser(email);
     res.status(200).json(result);
   }
 }

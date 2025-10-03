@@ -27,13 +27,13 @@ class UserCredsService {
 
       // render HTML email
       const { html: welcomeHtml, subject: welcomeSubject } =
-        await EmailTemplate.as_renderAll("new_user", {
+        await EmailTemplate.as_renderAll("welcome_user", {
           user: newUser,
           subject: "Welcome to our system!",
         });
 
       // send email
-      await nodemailer.C_Mail({
+      await nodemailer.sendEmail({
         to: email,
         subject: welcomeSubject,
         html: welcomeHtml,
@@ -98,6 +98,18 @@ class UserCredsService {
       if (error.name === 'TokenExpiredError') throw new Error('Token has expired');
       if (error.name === 'JsonWebTokenError') throw new Error('Invalid token');
       throw new Error(`OTP verification failed: ${error.message}`);
+    }
+  }
+
+  async deleteUser(email) {
+    try {
+      if (!email) throw new Error('Email is required');
+      const user = await mdl_UserCredentials.findOne({ where: { email } });
+      if (!user) throw new Error('User not found');
+      await user.destroy();
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      throw new Error(`User deletion failed: ${error.message}`);
     }
   }
 }

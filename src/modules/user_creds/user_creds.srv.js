@@ -21,15 +21,14 @@ class UserCredsService {
       const newUser = await mdl_UserCredentials.create({
         email,
         password: hashedPassword,
-        acc_type,
-        is_active: false,
+        acc_type
       });
 
       // render HTML email
       const { html: welcomeHtml, subject: welcomeSubject } =
         await EmailTemplate.as_renderAll("welcome_user", {
           user: newUser,
-          subject: "Welcome to our system!",
+          subject: "Welcome to Sales Training and Recruitment from Philproperties",
         });
 
       // send email
@@ -40,8 +39,7 @@ class UserCredsService {
       });
 
       return {
-        message: "User registered. Kindly verify your email to access other services.",
-        user: newUser,
+        message: "User registered. Kindly verify your email to access other services."
       };
     } catch (error) {
       console.error(error);
@@ -57,50 +55,73 @@ class UserCredsService {
       if (!emailRegex.test(email)) throw new Error('Invalid email format');
 
       // Fetch the user to ensure they exist and include in the email
-      const user = await mdl_UserCredentials.findOne({ where: { email } });
-      if (!user) throw new Error('User not found');
+      const existing_user = await mdl_UserCredentials.findOne({ where: { email } });
+      if (!existing_user) throw new Error('User not found');
 
       const otp = crypto.randomInt(100000, 999999).toString();
 
-      const { html, text, subject } = await EmailTemplate.as_renderAll('generate_otp', { user, otp });
-      await nodemailer.C_Mail({ to: email, subject, html, text });
+      const { html: otpHtml, subject: otpSubject } =
+        await EmailTemplate.as_renderAll("generate_otp", {
+          user: existing_user,
+          subject: "Verify your Email for Sales Training and Recruitment System - Philproperties",
+          otp
+        });
+
+      await nodemailer.sendEmail({
+        to: email,
+        subject: otpSubject,
+        html: otpHtml,
+      });
 
       const token = jwt.sign({ email, otp }, process.env.JWT_SECRET, { expiresIn: '5m' });
-
-      return { message: 'New OTP generated and sent to your email. Use the token for verification.', email, token };
+      return { message: 'New OTP generated and sent to your email. Use the token for verification.', token };
     } catch (error) {
       throw new Error(`OTP generation failed: ${error.message}`);
     }
   }
 
-  async verifyOtp(email, token) {
+  async verifyOtp(email, otp, tokenPayload) {
     try {
-      if (!email || !token) throw new Error('Email and token are required');
+      if (!email || !otp) throw new Error('Email and OTP are required');
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) throw new Error('Invalid email format');
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.email !== email) throw new Error('Invalid token for this email');
+      if (!tokenPayload) throw new Error('Missing token payload');
+      if (tokenPayload.email !== email) throw new Error('Invalid token for this email');
 
-      const user = await mdl_UserCredentials.findOne({ where: { email } });
-      if (!user) throw new Error('User not found');
+      // Compare provided OTP with token payload
+      if (String(tokenPayload.otp) !== String(otp)) {
+        throw new Error('OTP does not match');
+      }
 
-      if (user.is_active) return { message: 'Email already verified', user };
+      const verify_user = await mdl_UserCredentials.findOne({ where: { email } });
+      if (!verify_user) throw new Error('User not found');
 
-      await user.update({ is_active: true });
+      if (verify_user.verified) return { message: 'Email already verified', verify_user };
 
-      const { html, text, subject } = await EmailTemplate.as_renderAll('verify_otp', { user });
-      await nodemailer.C_Mail({ to: email, subject, html, text });
+      await verify_user.update({ verified: true });
+      const { html: verifyHtml, subject: verifySubject } =
+        await EmailTemplate.as_renderAll("verified_user", {
+          user: verify_user,
+          subject: "Congratulations! You are now verified for Sales Training and Recruitment System - Philproperties",
+        });
 
-      return { message: 'Email verified successfully', user };
+      await nodemailer.sendEmail({
+        to: email,
+        subject: verifySubject,
+        html: verifyHtml,
+      });
+
+      return { message: 'Email verified successfully' };
     } catch (error) {
-      if (error.name === 'TokenExpiredError') throw new Error('Token has expired');
-      if (error.name === 'JsonWebTokenError') throw new Error('Invalid token');
       throw new Error(`OTP verification failed: ${error.message}`);
     }
   }
 
+
+
+  // Set for debugging yet :)
   async deleteUser(email) {
     try {
       if (!email) throw new Error('Email is required');

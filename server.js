@@ -6,18 +6,18 @@ const mainRoutes = require('./src/utils/helpers.utils');
 const sequelize = require('./config/db.config');
 
 dotenv.config();
-const o_app = express();
+const app = express();
 
 // JSON Payload
-o_app.use(express.json({ limit: '10mb' }));
-o_app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-o_app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cors());
 
 // Load all
-o_app.use('/api/v1/data', mainRoutes);
+app.use('/api/v1/data', mainRoutes);
 
 // Main route
-o_app.get('/', (req, res) => {
+app.get('/', (req, res) => {
   res.json({
     project_name: "Sales Training and Recruitment System by Philproperties",
     project_overview: "Serverless architecture via REST with Sequelize, Nodemailer, ElastiCache, EC2 and S3",
@@ -43,11 +43,11 @@ const db_postgres_connection = async () => {
 db_postgres_connection();
 
 // Export handler for Serverless
-module.exports.handler = serverless(o_app);
+module.exports.handler = serverless(app);
 
 if (require.main === module) {
   const CFG_PORT = process.env.PORT || 3000;
-  o_app.listen(CFG_PORT, () => {
+  app.listen(CFG_PORT, () => {
     console.log(`Server running on port ${CFG_PORT}`);
   });
 }

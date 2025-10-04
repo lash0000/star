@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../../config/db.config');
 
 const mdl_UserCredentials = sequelize.define('UserCredentials', {
@@ -25,6 +25,11 @@ const mdl_UserCredentials = sequelize.define('UserCredentials', {
   acc_type: {
     type: DataTypes.ENUM('System', 'Google'),
     defaultValue: 'System'
+  },
+  verified: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   tableName: 'user_credentials',

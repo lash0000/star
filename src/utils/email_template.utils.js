@@ -37,8 +37,6 @@ class EmailTemplate {
     this.updateConfig(config);
 
     const html = await this.as_getHTML(templateName);
-
-    // you can either hardcode subject here, or add subject.pug later if needed
     const subject = config.subject || "Default Subject";
 
     return { html, subject };

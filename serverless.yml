@@ -3,13 +3,12 @@ app: star-philpro
 service: star
 
 plugins:
-  - serverless-dotenv-plugin
   - serverless-offline
 
 provider:
   name: aws
   versionFunctions: false
-  runtime: nodejs20.x
+  runtime: nodejs22.x
   region: ap-southeast-2
   environment:
     POSTGRE_HOST: ${env:POSTGRE_HOST}

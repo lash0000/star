@@ -1,4 +1,3 @@
-// src/modules/user_creds/user_creds.ctrl.js
 const UserCredsService = require('./user_creds.srv');
 
 class UserCredsController {
@@ -25,10 +24,14 @@ class UserCredsController {
   }
 
   async as_verifyOtp(req, res) {
-    const { email, token } = req.body;
-    if (!email || !token) return res.status(400).json({ error: 'Email and token are required' });
-    const result = await this.service.verifyOtp(email, token);
-    res.status(200).json(result);
+    try {
+      const { email, otp } = req.body;
+      const decoded = req.user;
+      const result = await UserCredsService.verifyOtp(email, otp, decoded);
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
   }
 
   async as_deleteUser(req, res) {

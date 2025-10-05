@@ -39,37 +39,33 @@ class UserSessionsService {
 
   async createSession(user_id, req, transaction) {
     try {
-      // Parse device info
       const agent = useragent.parse(req.get('User-Agent') || '');
 
-      // Get IP address
       const ip =
         req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
         req.ip ||
         req.connection?.remoteAddress ||
         null;
 
-      // Lookup geo location
       const geo = ip ? geoip.lookup(ip) : null;
 
-      // Structure location JSON
-      const location = geo
-        ? {
-          country: geo.country || null,
-          region: geo.region || null,
-          city: geo.city || null,
-          lat: geo.ll ? geo.ll[0] : null,
-          long: geo.ll ? geo.ll[1] : null
-        }
-        : { country: null, region: null, city: null, lat: null, long: null };
+      const login_info = {
+        ip_address: ip,
+        country: geo?.country || null,
+        region: geo?.region || null,
+        city: geo?.city || null,
+        lat: geo?.ll ? geo.ll[0] : null,
+        long: geo?.ll ? geo.ll[1] : null,
+        loginAt: new Date().toISOString()
+      };
 
-      // Create session record
       const user_session = await UserSessions.create(
         {
           user_id,
-          ip_address: ip, // ✅ string only
-          location,       // ✅ jsonb field
-          device_info: agent.toString()
+          login_info,
+          logout_info: null,
+          device_info: agent.toString(),
+          login_at: new Date()
         },
         { transaction }
       );
@@ -82,24 +78,30 @@ class UserSessionsService {
 
   async endSession(sessionId, transaction) {
     try {
-      // Validate input
       if (!sessionId) throw new Error('Session ID is required to end session.');
 
-      // Delete session record
       const session = await UserSessions.findOne({
         where: { session_id: sessionId },
       });
       if (!session) throw new Error('No active session found.');
 
-      // Update logout timestamp
+      const now = new Date().toISOString();
+
+      const logout_info = {
+        ...session.login_info,
+        logoutAt: now
+      };
+
       await UserSessions.update(
-        { logout_at: new Date() },
+        {
+          logout_at: now,
+          logout_info
+        },
         { where: { session_id: sessionId }, transaction }
       );
 
       return { message: 'Session ended successfully' };
-    }
-    catch (error) {
+    } catch (error) {
       throw new Error(`Ending session failed: ${error.message}`);
     }
   }

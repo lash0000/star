@@ -1,6 +1,7 @@
 // This locates our root handler for routes.
 const express = require('express');
 const userCredsRoutes = require('../modules/user_creds/user_creds.rt');
+const userProfileRoutes = require('../modules/user_profile/user_profile.rt');
 
 class mainRoutes {
   constructor() {
@@ -10,6 +11,8 @@ class mainRoutes {
 
   registerRoutes(router) {
     router.use('/user-creds', userCredsRoutes);
+    router.use('/profile', userProfileRoutes);
+
   }
 
   getRouter() {

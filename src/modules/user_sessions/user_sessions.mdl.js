@@ -25,14 +25,15 @@ const UserSessions = sequelize.define('UserSessions', {
     type: DataTypes.DATE,
     allowNull: true
   },
-  ip_address: {
-    type: DataTypes.STRING(50),
-    allowNull: true
-  },
-  location: {
+  login_info: {
     type: DataTypes.JSONB,
     allowNull: true,
-    comment: 'Stores {country, region, city, lat, long}'
+    comment: 'Stores JSON: { ip_address, country, region, city, lat, long, loginAt }'
+  },
+  logout_info: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+    comment: 'Stores JSON: { ip_address, country, region, city, lat, long, loginAt, logoutAt }'
   },
   device_info: {
     type: DataTypes.TEXT,

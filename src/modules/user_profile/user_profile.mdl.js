@@ -2,7 +2,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../../../config/db.config');
 const mdl_UserCredentials = require('../user_creds/user_creds.mdl');
 
-const mdl_UserInfo = sequelize.define('UserInfo', {
+const mdl_UserProfile = sequelize.define('UserProfile', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -38,10 +38,10 @@ const mdl_UserInfo = sequelize.define('UserInfo', {
     allowNull: true
   },
 }, {
-  tableName: 'user_info',
+  tableName: 'user_profile',
   timestamps: true
 });
 
-mdl_UserInfo.hasOne(mdl_UserCredentials, { foreignKey: 'user_id' })
+mdl_UserProfile.hasOne(mdl_UserCredentials, { foreignKey: 'user_id' })
 
-module.exports = mdl_UserInfo;
+module.exports = mdl_UserProfile;

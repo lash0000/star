@@ -1,10 +1,10 @@
-const { Sequelize, DataTypes, NOW } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../../../config/db.config');
-const mdl_UserCredentials = require('../user_creds/user_creds.mdl');
+const UserCredentials = require('../user_creds/UserCreds.model');
 
-const mdl_UserSessions = sequelize.define('UserSessions', {
+const UserSessions = sequelize.define('UserSessions', {
   session_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
@@ -12,36 +12,40 @@ const mdl_UserSessions = sequelize.define('UserSessions', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: mdl_UserCredentials,
+      model: UserCredentials,
       key: 'user_id'
-    }
+    },
   },
   login_at: {
     type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: Sequelize.literal('NOW()')
+    defaultValue: DataTypes.NOW,
+    allowNull: false
   },
   logout_at: {
     type: DataTypes.DATE,
     allowNull: true
   },
   ip_address: {
-    type: DataTypes.VARCHAR(45),
+    type: DataTypes.STRING(50),
     allowNull: true
   },
-  address: {
+  location: {
     type: DataTypes.JSONB,
-    allowNull: true
+    allowNull: true,
+    comment: 'Stores {country, region, city, lat, long}'
   },
   device_info: {
     type: DataTypes.TEXT,
-    allowNull: true
-  },
+    allowNull: true,
+    comment: 'User agent, browser, and device info'
+  }
 }, {
   tableName: 'user_sessions',
   timestamps: true
 });
 
-mdl_UserSessions.hasMany(mdl_UserCredentials, { foreignKey: 'user_id' })
+// cardinality: one to many
+UserSessions.belongsTo(UserCredentials, { foreignKey: 'user_id' });
+UserCredentials.hasMany(UserSessions, { foreignKey: 'user_id' });
 
-module.exports = mdl_UserSessions;
+module.exports = UserSessions;

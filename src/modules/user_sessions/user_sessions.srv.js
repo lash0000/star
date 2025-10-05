@@ -1,100 +1,108 @@
+const UserSessions = require('./user_sessions.mdl');
+
 const jwt = require('jsonwebtoken');
-const UserSessions = require('./UserSession.model');
-const UserCredentials = require('../user_creds/UserCreds.model');
 const geoip = require('geoip-lite');
-const UAParser = require('ua-parser-js');
+const useragent = require('useragent');
 
 class UserSessionsService {
   constructor() {
     this.ACCESS_TOKEN_EXPIRY = '15m';
     this.REFRESH_TOKEN_EXPIRY = '15d';
+
+    this.f_generateAccessToken = this.f_generateAccessToken.bind(this);
+    this.f_generateRefreshToken = this.f_generateRefreshToken.bind(this);
   }
 
-  async createSession(user_id, req) {
+  f_generateAccessToken(user, expires = "") {
+    return jwt.sign(
+      user,
+      process.env.JWT_SECRET,
+      { expiresIn: expires || this.ACCESS_TOKEN_EXPIRY }
+    );
+  }
+
+  f_generateRefreshToken(user, expires = "") {
+    return jwt.sign(
+      user,
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: expires || this.REFRESH_TOKEN_EXPIRY }
+    );
+  }
+
+  f_verifyRefreshToken(token) {
     try {
-      const user = await UserCredentials.findByPk(user_id);
-      if (!user) throw new Error('User not found.');
+      return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
+  }
 
-      const ip_address = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
-      const location = ip_address ? geoip.lookup(ip_address) : null;
+  async createSession(user_id, req, transaction) {
+    try {
+      // Parse device info
+      const agent = useragent.parse(req.get('User-Agent') || '');
 
-      const parser = new UAParser(req.headers['user-agent']);
-      const device_info = parser.getResult();
+      // Get IP address
+      const ip =
+        req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        req.ip ||
+        req.connection?.remoteAddress ||
+        null;
 
-      const access_token = jwt.sign(
-        { user_id },
-        process.env.JWT_SECRET,
-        { expiresIn: this.ACCESS_TOKEN_EXPIRY }
+      // Lookup geo location
+      const geo = ip ? geoip.lookup(ip) : null;
+
+      // Structure location JSON
+      const location = geo
+        ? {
+          country: geo.country || null,
+          region: geo.region || null,
+          city: geo.city || null,
+          lat: geo.ll ? geo.ll[0] : null,
+          long: geo.ll ? geo.ll[1] : null
+        }
+        : { country: null, region: null, city: null, lat: null, long: null };
+
+      // Create session record
+      const user_session = await UserSessions.create(
+        {
+          user_id,
+          ip_address: ip, // ✅ string only
+          location,       // ✅ jsonb field
+          device_info: agent.toString()
+        },
+        { transaction }
       );
 
-      const refresh_token = jwt.sign(
-        { user_id },
-        process.env.JWT_REFRESH_SECRET,
-        { expiresIn: this.REFRESH_TOKEN_EXPIRY }
-      );
+      return user_session;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-      const session = await UserSessions.upsert({
-        user_id,
-        ip_address,
-        location,
-        device_info,
-        login_at: new Date(),
-        logout_at: null
+  async endSession(sessionId, transaction) {
+    try {
+      // Validate input
+      if (!sessionId) throw new Error('Session ID is required to end session.');
+
+      // Delete session record
+      const session = await UserSessions.findOne({
+        where: { session_id: sessionId },
       });
-
-      return {
-        message: 'Login successful',
-        access_token,
-        refresh_token,
-        session
-      };
-    } catch (error) {
-      throw new Error(`Session creation failed: ${err.message}`);
-    }
-  }
-
-  async refreshAccessToken(refresh_token) {
-    try {
-      const decoded = jwt.verify(refresh_token, process.env.JWT_REFRESH_SECRET);
-      const user = await UserCredentials.findByPk(decoded.user_id);
-      if (!user) throw new Error('Invalid refresh token.');
-
-      const new_access_token = jwt.sign(
-        { user_id: decoded.user_id },
-        process.env.JWT_SECRET,
-        { expiresIn: this.ACCESS_TOKEN_EXPIRY }
-      );
-
-      return { access_token: new_access_token };
-    } catch (error) {
-      throw new Error(`Token refresh failed: ${err.message}`);
-    }
-  }
-
-  async logout(user_id) {
-    try {
-      const session = await UserSessions.findOne({ where: { user_id } });
       if (!session) throw new Error('No active session found.');
 
-      await session.update({ logout_at: new Date() });
-      return { message: 'Logout successful' };
-    } catch (err) {
-      throw new Error(`Logout failed: ${err.message}`);
-    }
-  }
+      // Update logout timestamp
+      await UserSessions.update(
+        { logout_at: new Date() },
+        { where: { session_id: sessionId }, transaction }
+      );
 
-  async cleanupExpiredSessions() {
-    try {
-      const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
-      await UserSessions.destroy({
-        where: {
-          logout_at: { [require('sequelize').Op.lt]: cutoff }
-        }
-      });
-    } catch (err) {
-      console.error('Session cleanup failed:', err.message);
+      return { message: 'Session ended successfully' };
+    }
+    catch (error) {
+      throw new Error(`Ending session failed: ${error.message}`);
     }
   }
 }
 
-module.exports = new UserSessionsService();
+module.exports = UserSessionsService;

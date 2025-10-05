@@ -23,10 +23,10 @@ const mdl_UserCredentials = sequelize.define('UserCredentials', {
     defaultValue: true
   },
   acc_type: {
-    type: DataTypes.ENUM('System', 'Google'),
-    defaultValue: 'System'
+    type: DataTypes.ENUM('system', 'google'),
+    defaultValue: 'system'
   },
-  verified: {
+  is_verified: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false

@@ -1,18 +1,123 @@
-const mdl_UserCredentials = require('./user_creds.mdl');
 const bcrypt = require('bcrypt');
-const nodemailer = require('../../utils/nodemailer.utils');
-const EmailTemplate = require('../../utils/email_template.utils');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const sequelize = require('../../../config/db.config');
 
-class UserCredsService {
+const mdl_UserCredentials = require('./user_creds.mdl');
+const UserSessionsService = require('../user_sessions/user_sessions.srv');
+
+const nodemailer = require('../../utils/nodemailer.utils');
+const EmailTemplate = require('../../utils/email_template.utils');
+
+class UserCredsService extends UserSessionsService {
   constructor() {
+    super();
+    this.login = this.login.bind(this);
+    this.refresh = this.refresh.bind(this);
     this.register = this.register.bind(this);
     this.generateOtp = this.generateOtp.bind(this);
     this.verifyOtp = this.verifyOtp.bind(this);
   }
 
-  async register({ email, password, acc_type = 'System' }) {
+  async login(req, res) {
+    const transaction = await sequelize.transaction();
+
+    try {
+      const { email, password } = req.body;
+
+      // Validate inputs
+      if (!email || !password) {
+        throw new Error('Either username or email is required along with password.');
+      }
+
+      // Find user record
+      const user = await mdl_UserCredentials.findOne({ where: { email: email } }, { transaction });
+      if (!user) throw new Error('User not found');
+
+      // Validate password
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) throw new Error('Invalid password');
+
+      // Validate user status
+      if (!user.is_active) throw new Error('Email not verified. Please verify your email before logging in.');
+      if (!user.is_verified) throw new Error('User not active. Please contact the administrator.');
+
+      // Prepare user payload for token generation
+      const userPayload = {
+        user_id: user.user_id,
+        email: user.email,
+        acc_type: user.acc_type
+      };
+
+      // Generate tokens using inherited methods
+      const accessToken = super.f_generateAccessToken(userPayload);
+      const refreshToken = super.f_generateRefreshToken(userPayload);
+
+      // Create session record
+      const user_session = await super.createSession(userPayload.user_id, req, transaction);
+
+      // Commit DB Transaction
+      await transaction.commit();
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      return {
+        message: 'Login successful',
+        accessToken,
+        sessionId: user_session.session_id,
+        user: userPayload
+      };
+    } catch (error) {
+      // Rollback the transaction on error
+      await transaction.rollback();
+      throw new Error(`Login failed: ${error.message}`);
+    }
+  }
+
+  async refresh(req, res) {
+    try {
+      // Extract refresh token from cookies
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) throw new Error('No refresh token provided.');
+
+      // Verify refresh token
+      const decoded = super.f_verifyRefreshToken(refreshToken);
+      if (!decoded || !decoded.user_id) {
+        throw new Error('Invalid or expired refresh token.');
+      }
+
+      // Ensure user still exists and is active
+      const user = await mdl_UserCredentials.findOne({
+        where: { user_id: decoded.user_id, is_active: true, is_verified: true },
+      });
+      if (!user) throw new Error('User not found or inactive.');
+
+      // 4Recreate the payload
+      const userPayload = {
+        user_id: user.user_id,
+        email: user.email,
+        acc_type: user.acc_type,
+      };
+
+      // Generate new tokens
+      const newAccessToken = super.f_generateAccessToken(userPayload);
+
+      // Return the new access token
+      return {
+        message: 'Token refreshed successfully.',
+        accessToken: newAccessToken,
+      };
+    } catch (error) {
+      throw new Error(`Token refresh failed: ${error.message}`);
+    }
+  }
+
+  async register({ email, password, acc_type = 'system' }) {
     try {
       if (!email || !password) throw new Error('Email and password are required');
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -73,7 +178,7 @@ class UserCredsService {
         html: otpHtml,
       });
 
-      const token = jwt.sign({ email, otp }, process.env.JWT_SECRET, { expiresIn: '5m' });
+      const token = super.f_generateAccessToken({ email, otp }, '5m');
       return { message: 'New OTP generated and sent to your email. Use the token for verification.', token };
     } catch (error) {
       throw new Error(`OTP generation failed: ${error.message}`);
@@ -100,7 +205,7 @@ class UserCredsService {
 
       if (verify_user.verified) return { message: 'Email already verified', verify_user };
 
-      await verify_user.update({ verified: true });
+      await verify_user.update({ is_verified: true });
       const { html: verifyHtml, subject: verifySubject } =
         await EmailTemplate.as_renderAll("verified_user", {
           user: verify_user,
@@ -119,7 +224,42 @@ class UserCredsService {
     }
   }
 
+  // LOGOUT
+  async logout(req, res) {
+    const transaction = await sequelize.transaction();
 
+    try {
+      // Get Session ID
+      const { sessionId } = req.body;
+      if (!sessionId) throw new Error('Session ID is required for logout.');
+
+      // Get refresh token from cookies
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) throw new Error('No refresh token found.');
+
+      // Delete session record from database
+      await this.endSession(sessionId, transaction);
+
+      // Commit DB Transaction
+      await transaction.commit();
+
+      // Clear the refresh token cookie
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+      });
+
+      // Return confirmation
+      return {
+        message: 'Logout successful. Session ended.',
+      };
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Logout failed: ${error.message}`);
+    }
+  }
+  // -- END OF LOGOUT
 
   // Set for debugging yet :)
   async deleteUser(email) {

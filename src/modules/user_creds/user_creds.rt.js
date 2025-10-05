@@ -4,6 +4,9 @@ const UserCredsController = require('./user_creds.ctrl');
 
 const router = Router();
 
+router.post('/login', UserCredsController.as_login);
+router.post('/logout', UserCredsController.as_logout);
+router.post('/refresh', UserCredsController.as_refresh);
 router.post('/register', UserCredsController.as_register);
 router.post('/generate-otp', UserCredsController.as_generateOtp);
 router.post('/verify', f_authMiddleware, UserCredsController.as_verifyOtp);

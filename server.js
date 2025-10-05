@@ -22,7 +22,7 @@ app.use('/api/v1/data', mainRoutes);
 app.get('/', (req, res) => {
   res.json({
     project_name: "Sales Training and Recruitment System by Philproperties",
-    project_overview: "Serverless architecture via REST with Sequelize, Nodemailer, ElastiCache, EC2 and S3",
+    project_overview: "It is a serverless architecture made via REST API design with Sequelize, Nodemailer, Elasticache and S3",
     source_code: "https://github.com/lash0000/star",
     version: "0xx",
     api_base_url: "/api/v1/data/{route}",

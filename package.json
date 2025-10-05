@@ -26,9 +26,10 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "nodemon": "^3.1.10",
     "serverless-offline": "^14.4.0"
   },
   "scripts": {
-    "start": "serverless offline"
+    "dev": "nodemon --exec \"serverless offline\" --ext js,json,yml"
   }
 }

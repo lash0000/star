@@ -1,3 +1,15 @@
+/***********************************************************************************************************************************************************************
+* File Name: user_sessions.mdl.js
+* Type of Program: Model
+* Description: User Sessions Model
+* Module: User Sessions
+* Author: rgrgogu
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        rgrgogu           001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../../../config/db.config');
 const UserCredentials = require('../user_creds/user_creds.mdl');

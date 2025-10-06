@@ -1,26 +1,67 @@
+/***********************************************************************************************************************************************************************
+* File Name: user_profile.srv.js
+* Type of Program: Service
+* Description: Service for managing user profiles
+* Module: User Profile
+* Author: rgrgogu
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        rgrgogu           001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
 const mdl_userProfile = require('./user_profile.mdl');
 const sequelize = require('../../../config/db.config');
 
 class UserProfileService {
   constructor() {
+    // Initialize the model
     this.model = mdl_userProfile;
+
+    // Bind methods
+    this.getUserProfile = this.getUserProfile.bind(this);
+    this.createUserProfile = this.createUserProfile.bind(this);
+    this.updateUserProfile = this.updateUserProfile.bind(this);
+    this.deleteUserProfile = this.deleteUserProfile.bind(this);
   }
 
+  /*
+  * Method: getUserProfile
+  * Description: Get user profile by user ID
+  * Route: POST /api/v1/data/profile/user/:user_id
+  * Controller: UserProfileController.as_getUserProfile
+  * Body: N/A
+  * Response: { user_id, name in JSON (given, middle, last, extension), address in JSON (street, brgy, city, province, country, postal_code,), phone_number, date_of_birth }
+  * Authorization: Requires access token in headers
+  */
   async getUserProfile({ user_id }) {
     try {
+      // Validate input
       if (!user_id) throw new Error('User ID is required');
 
+      // Fetch user profile from the database
       const profile = await this.model.findOne({
         where: { user_id }
       });
 
+      if (!profile) throw new Error('User profile not found');
+
       return profile;
     } catch (error) {
-      console.error('Error fetching user profile:', error.message);
       throw error;
     }
   }
+  // -- END OF getUserProfile --
 
+  /*
+  * Method: createUserProfile
+  * Description: Create a new user profile
+  * Route: POST /api/v1/data/profile
+  * Controller: UserCredsController.as_login
+  * Body: { user_id, name in JSON (given, middle, last, extension), address in JSON (street, brgy, city, province, country, postal_code,), phone_number, date_of_birth }
+  * Response: { values in body, createdAt, updatedAt }
+  * Authorization: Requires access token in headers
+  */
   async createUserProfile(profileData) {
     const transaction = await sequelize.transaction();
 
@@ -37,7 +78,17 @@ class UserProfileService {
       throw error;
     }
   }
+  // -- END OF createUserProfile --
 
+  /*
+  * Method: updateUserProfile
+  * Description: Update user profile by user ID
+  * Route: PUT /api/v1/data/profile/:user_id
+  * Controller: UserProfileController.as_updateUserProfile
+  * Body: { name in JSON (given, middle, last, extension), address in JSON (street, brgy, city, province, country, postal_code,), phone_number, date_of_birth }
+  * Response: { values in body, createdAt, updatedAt }
+  * Authorization: Requires access token in headers
+  */
   async updateUserProfile(user_id, updateData) {
     const transaction = await sequelize.transaction();
     try {
@@ -61,6 +112,15 @@ class UserProfileService {
     }
   }
 
+  /*
+  * Method: deleteUserProfile
+  * Description: Delete user profile by user ID
+  * Route: DELETE /api/v1/data/profile/:user_id
+  * Controller: UserProfileController.as_deleteUserProfile
+  * Body: N/A
+  * Response: true if deleted, false otherwise
+  * Authorization: Requires access token in headers
+  */
   async deleteUserProfile(user_id) {
     try {
       if (!user_id) throw new Error('User ID is required');
@@ -75,6 +135,7 @@ class UserProfileService {
       throw error;
     }
   }
+  // -- END OF deleteUserProfile --
 }
 
 module.exports = new UserProfileService();

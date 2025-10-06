@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const serverless = require('serverless-http');
 const cookieParser = require('cookie-parser');
-const mainRoutes = require('./src/utils/helpers.utils');
+const routes_v1 = require('./src/utils/routes_v1.utils');
 const sequelize = require('./config/db.config');
 
 dotenv.config();
@@ -16,16 +16,14 @@ app.use(cors());
 app.use(cookieParser());
 
 // Load all
-app.use('/api/v1/data', mainRoutes);
+app.use('/api/v1/data', routes_v1);
 
 // Main route
 app.get('/', (req, res) => {
   res.json({
     project_name: "Sales Training and Recruitment System by Philproperties",
     project_overview: "It is a serverless architecture made via REST API design with Sequelize, Nodemailer, Elasticache and S3",
-    source_code: "https://github.com/lash0000/star",
     version: "0xx",
-    api_base_url: "/api/v1/data/{route}",
     description: "A REST API method for STAR product.",
     available_routes: [
       "/api/v1/data/xxx"

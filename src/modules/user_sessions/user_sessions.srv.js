@@ -1,14 +1,31 @@
-const UserSessions = require('./user_sessions.mdl');
-
+/***********************************************************************************************************************************************************************
+* File Name: user_sessions.srv.js
+* Type of Program: Service
+* Description: User Sessions Service
+* Module: User Sessions
+* Author: rgrgogu
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        rgrgogu           001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
 const jwt = require('jsonwebtoken');
 const geoip = require('geoip-lite');
 const useragent = require('useragent');
 
+const UserSessionsModel = require('./user_sessions.mdl');
+
 class UserSessionsService {
   constructor() {
+    // Token expiry settings
     this.ACCESS_TOKEN_EXPIRY = '15m';
     this.REFRESH_TOKEN_EXPIRY = '15d';
 
+    // Initialize the user sessions model
+    this.model = UserSessionsModel;
+
+    // Bind methods to the class instance
     this.f_generateAccessToken = this.f_generateAccessToken.bind(this);
     this.f_generateRefreshToken = this.f_generateRefreshToken.bind(this);
     this.f_verifyRefreshToken = this.f_verifyRefreshToken.bind(this);
@@ -17,6 +34,16 @@ class UserSessionsService {
     this.endSession = this.endSession.bind(this);
   }
 
+  /*
+  * Method: f_generateAccessToken
+  * Description: Generates a JWT access token
+  * Route: N/A
+  * Controller: N/A
+  * Params: user (object), expires (string, optional)
+  * Body: N/A
+  * Response: JWT access token (string)
+  * Authorization: N/A
+  */
   f_generateAccessToken(user, expires = "") {
     return jwt.sign(
       user,
@@ -25,14 +52,39 @@ class UserSessionsService {
     );
   }
 
+  /*
+  * Method: f_generateRefreshToken
+  * Description: Generates a JWT refresh token
+  * Route: N/A
+  * Controller: N/A
+  * Params: user (object), expires (string, optional)
+  * Body: N/A
+  * Response: JWT refresh token (string)
+  * Authorization: N/A
+  */
   f_generateRefreshToken(user, expires = "") {
-    return jwt.sign(
-      user,
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: expires || this.REFRESH_TOKEN_EXPIRY }
-    );
+    try {
+      return jwt.sign(
+        user,
+        process.env.JWT_REFRESH_SECRET,
+        { expiresIn: expires || this.REFRESH_TOKEN_EXPIRY }
+      );
+    }
+    catch (error) {
+      throw new Error(`Failed to generate refresh token: ${error.message}`);
+    }
   }
 
+  /*
+  * Method: f_verifyRefreshToken
+  * Description: Verifies a JWT refresh token
+  * Route: N/A
+  * Controller: N/A
+  * Params: token (string)
+  * Body: N/A
+  * Response: Decoded token payload (object) or throws error if invalid
+  * Authorization: N/A
+  */
   f_verifyRefreshToken(token) {
     try {
       return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
@@ -41,35 +93,59 @@ class UserSessionsService {
     }
   }
 
+  /*
+  * Method: f_getIPDetails
+  * Description: Extracts IP and device details from the request
+  * Route: N/A
+  * Controller: N/A
+  * Params: req (Express request object)
+  * Body: N/A
+  * Response: Object with ip_address, country, region, city, lat, long, device_info
+  * Authorization: N/A
+  */
   f_getIPDetails(req) {
-    const agent = useragent.parse(req.get('User-Agent') || '');
+    try {
+      const agent = useragent.parse(req.get('User-Agent') || '');
 
-    const ip =
-      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-      req.ip ||
-      req.connection?.remoteAddress ||
-      null;
+      const ip =
+        req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        req.ip ||
+        req.connection?.remoteAddress ||
+        null;
 
-    const geo = ip ? geoip.lookup(ip) : null;
+      const geo = ip ? geoip.lookup(ip) : null;
 
-    const info = {
-      ip_address: ip,
-      country: geo?.country || null,
-      region: geo?.region || null,
-      city: geo?.city || null,
-      lat: geo?.ll ? geo.ll[0] : null,
-      long: geo?.ll ? geo.ll[1] : null,
-      device_info: agent.toString()
-    };
+      const info = {
+        ip_address: ip,
+        country: geo?.country || null,
+        region: geo?.region || null,
+        city: geo?.city || null,
+        lat: geo?.ll ? geo.ll[0] : null,
+        long: geo?.ll ? geo.ll[1] : null,
+        device_info: agent.toString()
+      };
 
-    return info;
+      return info;
+    } catch (error) {
+      throw new Error(`Failed to get IP details: ${error.message}`);
+    }
   }
 
+  /*
+  * Method: createSession
+  * Description: Creates a new user session
+  * Route: N/A
+  * Controller: N/A
+  * Params: user_id (UUID), req (Express request object), transaction (Sequelize transaction)
+  * Body: N/A
+  * Response: Created user session object
+  * Authorization: N/A
+  */
   async createSession(user_id, req, transaction) {
     try {
       const login_info = this.f_getIPDetails(req);
 
-      const user_session = await UserSessions.create(
+      const user_session = await this.model.create(
         {
           user_id,
           login_info,
@@ -85,19 +161,29 @@ class UserSessionsService {
     }
   }
 
+  /*
+  * Method: endSession
+  * Description: Ends an existing user session
+  * Route: N/A
+  * Controller: N/A
+  * Params: sessionId (BIGINT), req (Express request object), transaction (Sequelize transaction)
+  * Body: N/A
+  * Response: Message indicating success
+  * Authorization: N/A
+  */
   async endSession(sessionId, req, transaction) {
     try {
       if (!sessionId) throw new Error('Session ID is required to end session.');
 
       // Check session exists
-      const session = await UserSessions.findOne({
+      const session = await this.model.findOne({
         where: { session_id: sessionId },
       });
       if (!session) throw new Error('No active session found.');
 
       const logout_info = this.f_getIPDetails(req);
 
-      await UserSessions.update(
+      await this.model.update(
         {
           logout_date: new Date(),
           logout_info

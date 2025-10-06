@@ -1,3 +1,15 @@
+/***********************************************************************************************************************************************************************
+* File Name: user_creds.mdl.js
+* Type of Program: Model
+* Description: Model for user credentials management
+* Module: User Credentials
+* Author: rgrgogu
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        rgrgogu           001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../../config/db.config');
 

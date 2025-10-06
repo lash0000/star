@@ -12,7 +12,6 @@ class mainRoutes {
   registerRoutes(router) {
     router.use('/user-creds', userCredsRoutes);
     router.use('/profile', userProfileRoutes);
-
   }
 
   getRouter() {

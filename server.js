@@ -1,3 +1,16 @@
+/***********************************************************************************************************************************************************************
+* File Name: server.js
+* Type of Program: Root Application
+* Description: Root handler for serverless framework application
+* Module: App
+* Author: rgrgogu
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        rgrgogu           001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');

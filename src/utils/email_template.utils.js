@@ -1,3 +1,16 @@
+/***********************************************************************************************************************************************************************
+* File Name: email_template.utils.js
+* Type of Program: Utility
+* Description: Utility function of Email Template thru template engines.
+* Module: Service Account
+* Author: lash0000
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        lash0000          001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
+
 const path = require("path");
 const Email = require("email-templates");
 

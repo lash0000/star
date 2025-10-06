@@ -1,3 +1,16 @@
+/***********************************************************************************************************************************************************************
+* File Name: nodemailer.utils.js
+* Type of Program: Utility
+* Description: Service utility for Nodemailer.
+* Module: Email Service
+* Author: lash0000
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        lash0000          001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
+
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 

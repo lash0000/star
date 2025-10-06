@@ -1,3 +1,16 @@
+/***********************************************************************************************************************************************************************
+* File Name: routes_v1.util.js
+* Type of Program: Utility
+* Description: Utility controller for versioning routes handler 
+* Module: Route Handler
+* Author: rgrgogu
+* Date Created: Oct. 6, 2025
+***********************************************************************************************************************************************************************
+* Change History:
+* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+* Oct. 6, 2025        rgrgogu           001            Initial creation - STAR Phase 1 Project
+***********************************************************************************************************************************************************************/
+
 // This locates our root handler for routes.
 const express = require('express');
 const userCredsRoutes = require('../modules/user_creds/user_creds.rt');

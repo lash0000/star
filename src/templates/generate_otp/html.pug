@@ -1,12 +1,98 @@
-html
+//***********************************************************************************************************************************************************************
+//* File Name: html.pug (for Generate OTP)
+//* Type of Program: Dynamic Template Engine
+//* Description: Template engine for generate OTP
+//* Module: User Credentials
+//* Author: Kenneth Obsequio (@lash0000)
+//* Date Created: Oct. 6, 2025
+//***********************************************************************************************************************************************************************
+//* Change History:
+//* DATE                AUTHOR            LOG NUMBER     DESCRIPTION                                                      
+//* Oct. 6, 2025        lash0000          001            Initial creation - STAR Phase 1 Project
+//**********************************************************************************************************************************************************************
+
+doctype html
+html(lang="en")
   head
-    title Email Verification
-    style
-      include style.css
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title One Time Password for Sales Training and Recruitment of Philproperties.
+    style.
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: 'Arial', sans-serif;
+        background-color: #f1f1f1;
+      }
+      @media only screen and (max-width: 600px) {
+        body {
+          padding: 10px !important;
+        }
+
+        div[style*="max-width:600px"] {
+          max-width: 100% !important;
+          margin: 0 auto !important;
+          border-radius: 0 !important;
+        }
+
+        div[style*="padding:32px 40px"] {
+          padding: 20px !important;
+        }
+
+        div[style*="padding:36px"] {
+          padding: 24px !important;
+        }
+
+        img {
+          width: 150px !important;
+          height: auto !important;
+        }
+
+        div[style*="font-size:24px"] {
+          font-size: 20px !important;
+        }
+
+        div[style*="font-size:14px"] {
+          font-size: 13px !important;
+          line-height: 1.5 !important;
+        }
+
+        div[style*="padding:16px 40px"] {
+          padding: 12px 20px !important;
+        }
+      }
   body
-    h1 Verify Your Email to Access Other Services
-    p Hi,
-    p Your One-Time Password (OTP) for email verification is:
-    p.code #{otp}
-    p This OTP expires in 5 minutes. Please do not share it with anyone.
-    p Here at Sales Training and Recruitment we are excited for you on board.
+    div(style="max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);")
+      
+      // Header
+      div(style="background-color:#232f3e;padding:36px;text-align:center;")
+        div(style="display:inline-block;")
+          img(src="https://cq5as7pc73.ufs.sh/f/pHNnzIw3VjcgjEJ1kFubDgYdvnt1cCAMyRjfOIGiUXPmZF3W", alt="Philproperties Logo", style="width:200px;object-fit:cover;")
+
+      // Content
+      div(style="padding:32px 40px;color:#333333;line-height:1.6;")
+        div(style="margin-bottom:16px;font-size:14px;")
+          | Please use this One-Time Password (OTP) to complete your email verification process:
+
+        div(style="margin-bottom:16px;font-size:24px;font-weight:700;text-align:center;")
+          | #{otp}
+
+        div(style="margin-bottom:16px;font-size:14px;")
+          | This OTP will expire in 5 minutes. Kindly ensure that you do not share it with anyone.
+
+        div(style="margin-bottom:16px;font-size:14px;")
+          | This service account is open for replies. If you have any questions, feel free to respond directly to this message.
+
+        div(style="margin-top:16px;font-size:14px;")
+          | Thank you for your continued interest in Philproperties Corporation.
+
+        div(style="margin-top:16px;font-size:14px;")
+          | Sincerely,
+          br
+          | Philproperties
+
+      // Footer
+      div(style="background-color:#f4f4f4;padding:16px 40px;font-size:12px;color:#666666;line-height:1.5;text-align:center;")
+        p(style="margin:0;")
+          | Philproperties International Corporation is a dynamic company that offers comprehensive service to cover all clientele real estate needs. 21/F Unit 2116-17 Park Triangle Corporate Plaza, North Tower, BGC Taguig City.
+        p(style="margin: 12px 0 0 0;") © #{new Date().getFullYear()}, Philproperties International Corporation. All rights reserved.

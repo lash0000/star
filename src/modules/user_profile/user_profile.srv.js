@@ -23,13 +23,17 @@ class UserProfileService {
 
   async createUserProfile(profileData) {
     const transaction = await sequelize.transaction();
+
     try {
+      // Create new user profile
       const newProfile = await this.model.create(profileData, { transaction });
+
+      // Commit DB Transaction
       await transaction.commit();
+
       return newProfile;
     } catch (error) {
       await transaction.rollback();
-      console.error('Error creating user profile:', error.message);
       throw error;
     }
   }
@@ -73,4 +77,4 @@ class UserProfileService {
   }
 }
 
-module.exports = UserProfileService;
+module.exports = new UserProfileService();

@@ -238,7 +238,7 @@ class UserCredsService extends UserSessionsService {
       if (!refreshToken) throw new Error('No refresh token found.');
 
       // Delete session record from database
-      await this.endSession(sessionId, transaction);
+      await this.endSession(sessionId, req, transaction);
 
       // Commit DB Transaction
       await transaction.commit();

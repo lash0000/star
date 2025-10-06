@@ -2,7 +2,7 @@ const UserProfileService = require('./user_profile.srv');
 
 class UserProfileController {
   constructor() {
-    this.service = new UserProfileService();
+    this.service = UserProfileService;
     this.as_getUserProfile = this.as_getUserProfile.bind(this);
     this.as_createUserProfile = this.as_createUserProfile.bind(this);
     this.as_updateUserProfile = this.as_updateUserProfile.bind(this);

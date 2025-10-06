@@ -11,6 +11,10 @@ class UserSessionsService {
 
     this.f_generateAccessToken = this.f_generateAccessToken.bind(this);
     this.f_generateRefreshToken = this.f_generateRefreshToken.bind(this);
+    this.f_verifyRefreshToken = this.f_verifyRefreshToken.bind(this);
+    this.f_getIPDetails = this.f_getIPDetails.bind(this);
+    this.createSession = this.createSession.bind(this);
+    this.endSession = this.endSession.bind(this);
   }
 
   f_generateAccessToken(user, expires = "") {
@@ -37,35 +41,40 @@ class UserSessionsService {
     }
   }
 
+  f_getIPDetails(req) {
+    const agent = useragent.parse(req.get('User-Agent') || '');
+
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.ip ||
+      req.connection?.remoteAddress ||
+      null;
+
+    const geo = ip ? geoip.lookup(ip) : null;
+
+    const info = {
+      ip_address: ip,
+      country: geo?.country || null,
+      region: geo?.region || null,
+      city: geo?.city || null,
+      lat: geo?.ll ? geo.ll[0] : null,
+      long: geo?.ll ? geo.ll[1] : null,
+      device_info: agent.toString()
+    };
+
+    return info;
+  }
+
   async createSession(user_id, req, transaction) {
     try {
-      const agent = useragent.parse(req.get('User-Agent') || '');
-
-      const ip =
-        req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-        req.ip ||
-        req.connection?.remoteAddress ||
-        null;
-
-      const geo = ip ? geoip.lookup(ip) : null;
-
-      const login_info = {
-        ip_address: ip,
-        country: geo?.country || null,
-        region: geo?.region || null,
-        city: geo?.city || null,
-        lat: geo?.ll ? geo.ll[0] : null,
-        long: geo?.ll ? geo.ll[1] : null,
-        loginAt: new Date().toISOString()
-      };
+      const login_info = this.f_getIPDetails(req);
 
       const user_session = await UserSessions.create(
         {
           user_id,
           login_info,
           logout_info: null,
-          device_info: agent.toString(),
-          login_at: new Date()
+          login_date: new Date()
         },
         { transaction }
       );
@@ -76,25 +85,21 @@ class UserSessionsService {
     }
   }
 
-  async endSession(sessionId, transaction) {
+  async endSession(sessionId, req, transaction) {
     try {
       if (!sessionId) throw new Error('Session ID is required to end session.');
 
+      // Check session exists
       const session = await UserSessions.findOne({
         where: { session_id: sessionId },
       });
       if (!session) throw new Error('No active session found.');
 
-      const now = new Date().toISOString();
-
-      const logout_info = {
-        ...session.login_info,
-        logoutAt: now
-      };
+      const logout_info = this.f_getIPDetails(req);
 
       await UserSessions.update(
         {
-          logout_at: now,
+          logout_date: new Date(),
           logout_info
         },
         { where: { session_id: sessionId }, transaction }

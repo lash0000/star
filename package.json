@@ -30,6 +30,6 @@
     "serverless-offline": "^14.4.0"
   },
   "scripts": {
-    "dev": "nodemon --exec \"serverless offline\" --ext js,json,yml --watch .env"
+    "dev": "nodemon --exec \"serverless offline\" --ext js,json,yml"
   }
 }

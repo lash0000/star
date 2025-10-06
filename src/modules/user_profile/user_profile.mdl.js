@@ -16,17 +16,14 @@ const mdl_UserProfile = sequelize.define('UserProfile', {
       key: 'user_id'
     }
   },
-  email: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    unique: true
-  },
   name: {
     type: DataTypes.JSONB,
-    allowNull: true
+    allowNull: true,
+    comment: 'stores given, middle, last, extension name'
   },
   address: {
     type: DataTypes.JSONB,
+    comment: 'stores street, brgy, city, province, country, postal_code',
     allowNull: true
   },
   phone_number: {
@@ -34,7 +31,7 @@ const mdl_UserProfile = sequelize.define('UserProfile', {
     allowNull: true
   },
   date_of_birth: {
-    type: DataTypes.DATE,
+    type: DataTypes.STRING(10),
     allowNull: true
   },
 }, {

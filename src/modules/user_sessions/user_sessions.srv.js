@@ -23,7 +23,7 @@ class UserSessionsService {
     this.REFRESH_TOKEN_EXPIRY = '15d';
 
     // Initialize the user sessions model
-    this.model = UserSessionsModel;
+    this.sessionModel = UserSessionsModel;
 
     // Bind methods to the class instance
     this.f_generateAccessToken = this.f_generateAccessToken.bind(this);
@@ -144,8 +144,8 @@ class UserSessionsService {
   async createSession(user_id, req, transaction) {
     try {
       const login_info = this.f_getIPDetails(req);
-
-      const user_session = await this.model.create(
+      
+      const user_session = await this.sessionModel.create(
         {
           user_id,
           login_info,
@@ -176,14 +176,14 @@ class UserSessionsService {
       if (!sessionId) throw new Error('Session ID is required to end session.');
 
       // Check session exists
-      const session = await this.model.findOne({
+      const session = await this.sessionModel.findOne({
         where: { session_id: sessionId },
       });
       if (!session) throw new Error('No active session found.');
 
       const logout_info = this.f_getIPDetails(req);
 
-      await this.model.update(
+      await this.sessionModel.update(
         {
           logout_date: new Date(),
           logout_info

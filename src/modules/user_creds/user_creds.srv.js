@@ -75,8 +75,10 @@ class UserCredsService extends UserSessionsService {
         email: user.email,
         acc_type: user.acc_type
       };
+      console.log(userPayload);
 
       // Generate tokens using inherited methods
+
       const accessToken = super.f_generateAccessToken(userPayload);
       const refreshToken = super.f_generateRefreshToken(userPayload);
 
@@ -86,7 +88,7 @@ class UserCredsService extends UserSessionsService {
       // Commit DB Transaction
       await transaction.commit();
 
-      // Add refresh token to HTTP-only cookie
+      // Add refresh token to HTTP-only cookie 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

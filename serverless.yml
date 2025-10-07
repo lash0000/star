@@ -42,6 +42,7 @@ package:
     - .vscode/**
     - venv/**
     - coverage/**
+    - undefined/**
 
 functions:
   mainRoutes:

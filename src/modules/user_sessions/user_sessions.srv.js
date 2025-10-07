@@ -106,7 +106,7 @@ class UserSessionsService {
   f_getIPDetails(req) {
     try {
       const agent = useragent.parse(req.get('User-Agent') || '');
-
+      console.log(req.get('User-Agent'), agent)
       const ip =
         req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
         req.ip ||
@@ -144,7 +144,7 @@ class UserSessionsService {
   async createSession(user_id, req, transaction) {
     try {
       const login_info = this.f_getIPDetails(req);
-      
+
       const user_session = await this.sessionModel.create(
         {
           user_id,

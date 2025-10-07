@@ -183,7 +183,7 @@ class UserSessionsService {
 
       const logout_info = this.f_getIPDetails(req);
 
-      await this.sessionModel.update(
+      await session.update(
         {
           logout_date: new Date(),
           logout_info
